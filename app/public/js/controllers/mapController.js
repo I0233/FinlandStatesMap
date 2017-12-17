@@ -6,7 +6,9 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 
 	var mapboxAccessToken = 'pk.eyJ1IjoiYWxpbmFkaHVtMjAxNyIsImEiOiJjamJhcDNleGswdWpsMnF1cGRsNmRqZnM5In0.wchgRianFrALk0bMQHhA_A';
 	var map = L.map('map').setView(new L.LatLng(64.9, 25), 5);
-	var info = L.control();
+	var stateInfo = L.control({position: 'bottomright'});
+	$scope.layers = [];
+	$scope.topCities = [];
 
 	L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken,{
 			id: 'mapbox.light',
@@ -26,6 +28,7 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 	        mouseout: resetHighlight,
 	        click: zoomToFeature
 	    });
+			$scope.layers.push(layer);
 	}
 
 	var searchControl = new L.Control.Search({
@@ -41,7 +44,7 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 
 		searchControl.on('search:locationfound', function(e) {
 			e.layer.setStyle({fillColor: '#3f0', color: '#0f0'});
-			info.update(e.layer.feature.properties);
+			stateInfo.update(e.layer.feature.properties);
 			if(e.layer._popup){
 				e.layer.openPopup();
 			}
@@ -49,7 +52,7 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 			geojson.eachLayer(function(layer) {
 				geojson.resetStyle(layer);
 			});
-			info.update();
+			stateInfo.update();
 		});
 		map.addControl(searchControl);
 
@@ -105,32 +108,48 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 	    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
 	        layer.bringToFront();
 	    }
-			info.update(layer.feature.properties);
+			stateInfo.update(layer.feature.properties);
 	}
 
 	function resetHighlight(e) {
 	    geojson.resetStyle(e.target);
-			info.update();
+			stateInfo.update();
 	}
 
 	function zoomToFeature(e) {
 	    map.fitBounds(e.target.getBounds());
 	}
 
-	info.onAdd = function (map) {
-	    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+	$scope.setCities = function(){
+		try {
+			let city = {};
+			if($scope.layers && $scope.layers.length > 0){
+				for (var i = 0; i < $scope.layers.length; i++) {
+					let layerProperty = $scope.layers[i].feature.properties;
+					city = {name: layerProperty.name, point: layerProperty.code.replace(/area/g, '')};
+					$scope.topCities.push(city)
+				}
+			}
+		} catch (err) {
+			$exceptionHandler("Error while setting cities:", err.message || JSON.stringfy(err));
+		}
+	}();
+
+	stateInfo.onAdd = function (map) {
+	    this._div = L.DomUtil.create('div', 'info legend');
+			this._div.innerHTML = "<div id='stateInfo' style='min-width: 310px; height: 400px; margin: 0 auto'></div>";
 	    this.update();
 	    return this._div;
 	};
 
 	// method that we will use to update the control based on feature properties passed
-	info.update = function (props) {
-	    this._div.innerHTML = '<h4>Luckiest cities of Finland</h4>' +  (props ?
-	        '<b>' + props.name + '</b><br />' + props.code
-	        : 'Hover over a state');
+	stateInfo.update = function (props) {
+	    // this._div.innerHTML = '<h4>Luckiest cities of Finland</h4>' +  (props ?
+	    //     '<b>' + props.name + '</b><br />' + props.code
+	    //     : 'Hover over a state');
 	};
+	stateInfo.addTo(map);
 
-	info.addTo(map);
 
 	// Disables map dragging
 	// map.on('mouseover', function() {
@@ -142,4 +161,45 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 	  map.invalidateSize();
 	}).trigger("resize");
 
+	$( document ).ready(function() {
+		Highcharts.chart('stateInfo', {
+				chart: {
+						type: 'column'
+				},
+				title: {
+						text: 'Luckiest cities of Finland'
+				},
+				xAxis: {
+						categories: ['Helsinki', 'Turku', 'Tampere', 'Oulu', 'Jyväskylä']
+				},
+				yAxis: {
+						min: 0,
+						title: {
+								text: 'Lottery win'
+						}
+				},
+				tooltip: {
+						pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+						shared: true
+				},
+				plotOptions: {
+						column: {
+								stacking: 'percent'
+						}
+				},
+				series: [{
+						name: 'Euro Jackpot',
+						data: [5, 3, 4, 7, 2],
+						color: '#5E3177'
+				}, {
+						name: 'Lotto',
+						data: [2, 2, 3, 2, 1],
+						color: '#FFC41E'
+				}, {
+						name: 'Keno',
+						data: [3, 4, 4, 2, 5],
+						color: '#0066FF',
+					}]
+			});
+	});
 });

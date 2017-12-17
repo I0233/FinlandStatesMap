@@ -2,40 +2,42 @@
 
 <!-- ASSIGN OUR ANGULAR MODULE -->
 <html ng-app="mapApp">
-<head>
-	<!-- META -->
-	<meta charset="utf-8">
-	<meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- CSS -->
-  <link rel="stylesheet" href="libraries/tether.min.css">
-  <link rel="stylesheet" href="libraries/bootstrap.min.css">
-  <link rel="stylesheet" href="css/app.css">
-  <link rel="stylesheet" href="css/icons.css">
-	<link rel="stylesheet" href="libraries/leaflet.css">
-	<link rel="stylesheet" href="libraries/leaflet-search.css">
-	<link rel="stylesheet" href="libraries/leaflet-search.mobile.css">
-	<!-- Libraries -->
-	<script src="libraries/angular.min.js"></script>
-	<script src="libraries/angular-animate.min.js"></script>
-	<script src="libraries/angular-route.min.js"></script>
-	<script src="libraries/angular-messages.min.js"></script>
-	<script src="libraries/angular-local-storage.min.js"></script>
-	<script src="libraries/jquery-3.2.1.min.js"></script>
-	<script src="libraries/leaflet.js"></script>
-	<script src="libraries/leaflet-search.js"></script>
-	<script src="data/finland-states.js"></script>
-	<!-- Controller -->
-	<script src="js/core.js"></script>
-	<script src="js/controllers/mapController.js"></script>
-</head>
+	<head>
+		<!-- META -->
+		<meta charset="utf-8">
+		<meta name="description" content="">
+	  <meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- CSS -->
+	  <link rel="stylesheet" href="libraries/tether.min.css">
+	  <link rel="stylesheet" href="libraries/bootstrap.min.css">
+	  <link rel="stylesheet" href="css/app.css">
+	  <link rel="stylesheet" href="css/icons.css">
+		<link rel="stylesheet" href="libraries/leaflet.css">
+		<link rel="stylesheet" href="libraries/leaflet-search.css">
+		<link rel="stylesheet" href="libraries/leaflet-search.mobile.css">
+		<!-- Libraries -->
+		<script src="libraries/angular.min.js"></script>
+		<script src="libraries/angular-animate.min.js"></script>
+		<script src="libraries/angular-route.min.js"></script>
+		<script src="libraries/angular-messages.min.js"></script>
+		<script src="libraries/angular-local-storage.min.js"></script>
+		<script src="libraries/jquery-3.2.1.min.js"></script>
+		<script src="libraries/leaflet.js"></script>
+		<script src="libraries/leaflet-search.js"></script>
+		<script src="libraries/highcharts.js"></script>
+		<script src="libraries/highcharts-exporting.js"></script>
+		<script src="data/finland-states.js"></script>
+		<!-- Controller -->
+		<script src="js/core.js"></script>
+		<script src="js/controllers/mapController.js"></script>
+	</head>
 
-<!-- SET THE CONTROLLER -->
-<body ng-controller="mapController">
-	<div class="row mx-0">
-		<div class="col-auto">
-			<div id="map" class="col-auto"></div>
+	<!-- SET THE CONTROLLER -->
+	<body ng-controller="mapController">
+		<div class="row mx-0">
+			<div class="col-auto">
+				<div id="map" class="col-auto"></div>
+			</div>
 		</div>
-	</div>
-</body>
+	</body>
 </html>
