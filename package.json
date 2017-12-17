@@ -1,0 +1,13 @@
+{
+  "name": "mapApp",
+  "version": "0.0.1",
+  "description": "Simple leaflet application",
+  "main": "server.js",
+  "author": "Ali Nadhum",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.10.8",
+    "method-override": "^2.3.10",
+    "morgan": "^1.9.0"
+  }
+}
