@@ -58,25 +58,15 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 
 
 	function getColor(code) {
-		let colors = ['#800026', '#BD0026', '#E31A1C', '#FC4E2A', '#FD8D3C', '#FEB24C', '#FED976', '#FFEDA0'];
+		let colors = ['#5E3177', '#FFC41E', '#0066FF'];
 		try {
 			let codeNum = code.replace(/area/g, '');
-			if (codeNum <= 100) {
+			if (codeNum <= 300) {
 				return colors[0];
-			} else if (codeNum > 100 && codeNum <= 200) {
+			} else if (codeNum > 300 && codeNum <= 600) {
 				return colors[1];
-			} else if (codeNum > 200 && codeNum <= 300) {
+			} else if (codeNum > 600) {
 				return colors[2];
-			} else if (codeNum > 300 && codeNum <= 400) {
-				return colors[3];
-			} else if (codeNum > 400 && codeNum <= 500) {
-				return colors[4];
-			} else if (codeNum > 500 && codeNum <= 600) {
-				return colors[5];
-			} else if (codeNum > 600 && codeNum <= 700) {
-				return colors[6];
-			} else if (codeNum > 700) {
-				return colors[7];
 			}
 		} catch (err) {
 			$exceptionHandler("Error occured:", err.message || JSON.stringfy(err));
@@ -130,6 +120,7 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 					$scope.topCities.push(city)
 				}
 			}
+			console.log($scope.topCities);
 		} catch (err) {
 			$exceptionHandler("Error while setting cities:", err.message || JSON.stringfy(err));
 		}
@@ -190,15 +181,15 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 				series: [{
 						name: 'Euro Jackpot',
 						data: [5, 3, 4, 7, 2],
-						color: '#5E3177'
+						color: '#5E3177' // Violetti
 				}, {
 						name: 'Lotto',
 						data: [2, 2, 3, 2, 1],
-						color: '#FFC41E'
+						color: '#FFC41E' // Keltainen
 				}, {
 						name: 'Keno',
 						data: [3, 4, 4, 2, 5],
-						color: '#0066FF',
+						color: '#0066FF', // Sininen
 					}]
 			});
 	});

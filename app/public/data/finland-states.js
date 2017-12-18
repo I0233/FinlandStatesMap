@@ -1,4 +1,4 @@
-finlandStatesData = {
+var finlandStatesData = {
 	"type": "FeatureCollection",
 	"features": [
 		{
