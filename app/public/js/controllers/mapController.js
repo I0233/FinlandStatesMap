@@ -8,7 +8,7 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 	var map = L.map('map').setView(new L.LatLng(64.9, 25), 5);
 	var stateInfo = L.control({position: 'bottomright'});
 	$scope.layers = [];
-	$scope.topCities = [];
+	$scope.cities = [];
 
 	L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken,{
 			id: 'mapbox.light',
@@ -16,20 +16,10 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 			minZoom: 5,
 	}).addTo(map);
 
-
 	var geojson = L.geoJson(finlandStatesData, {
 	    style: style,
 	    onEachFeature: onEachFeature
 	}).addTo(map);
-
-	function onEachFeature(feature, layer) {
-	    layer.on({
-	        mouseover: highlightFeature,
-	        mouseout: resetHighlight,
-	        click: zoomToFeature
-	    });
-			$scope.layers.push(layer);
-	}
 
 	var searchControl = new L.Control.Search({
 			layer:  geojson,
@@ -110,17 +100,30 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 	    map.fitBounds(e.target.getBounds());
 	}
 
-	$scope.setCities = function(){
+	function onEachFeature(feature, layer) {
+	    layer.on({
+	        mouseover: highlightFeature,
+	        mouseout: resetHighlight,
+	        click: zoomToFeature
+	    });
+			$scope.layers.push(layer);
+	}
+
+	$scope.refactorCities = function(){
 		try {
-			let city = {};
 			if($scope.layers && $scope.layers.length > 0){
+				let sortable = [];
 				for (var i = 0; i < $scope.layers.length; i++) {
 					let layerProperty = $scope.layers[i].feature.properties;
-					city = {name: layerProperty.name, point: layerProperty.code.replace(/area/g, '')};
-					$scope.topCities.push(city)
+					let city = {name: layerProperty.name, point: layerProperty.code.replace(/area/g, '')};
+					$scope.cities.push(city);
+				}
+				if($scope.cities && $scope.cities.length > 0){
+					$scope.cities.sort(function(object1, object2){
+						return parseFloat(object2.point) - parseFloat(object1.point);
+					});
 				}
 			}
-			console.log($scope.topCities);
 		} catch (err) {
 			$exceptionHandler("Error while setting cities:", err.message || JSON.stringfy(err));
 		}
