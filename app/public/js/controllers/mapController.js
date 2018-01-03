@@ -1,14 +1,28 @@
 'use strict';
 
-var app = angular.module('mapApp',[]);
+angular.module('mapApp', ['ngRoute', 'ngMessages'])
+.config(['$routeProvider', function($routeProvider) {
+  $routeProvider.when('/', {
+    templateUrl: 'index.html',
+    controller: 'mapController'
+  });
+}])
 
-app.controller('mapController', function($scope, $http, $window, $exceptionHandler) {
+.controller('mapController', function($scope, $http, $window, $exceptionHandler, apiService) {
 
 	var mapboxAccessToken = 'pk.eyJ1IjoiYWxpbmFkaHVtMjAxNyIsImEiOiJjamJhcDNleGswdWpsMnF1cGRsNmRqZnM5In0.wchgRianFrALk0bMQHhA_A';
-	var map = L.map('map').setView(new L.LatLng(64.9, 25), 5);
+	var map = L.map('map').setView(new L.LatLng(64.9, 30), 5);
 	var stateInfo = L.control({position: 'bottomright'});
+
 	$scope.layers = [];
 	$scope.cities = [];
+	$scope.citiesFromJson = [];
+
+	var lotteryEntities = {
+		'EuroJackpot': '#5E3177',
+		'Lotto': '#EC342B',
+		'Keno': '#E99D3B'
+	};
 
 	L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken,{
 			id: 'mapbox.light',
@@ -34,6 +48,21 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 
 		searchControl.on('search:locationfound', function(e) {
 			e.layer.setStyle({fillColor: '#3f0', color: '#0f0'});
+      if($scope.series && $scope.series.length > 0){
+        $scope.reserveSeries = [];
+        $scope.reserveTopCities = $scope.topCities;
+        for (var i = 0; i < $scope.series.length; i++) {
+          let serie = $scope.series[i];
+          let serieCopy = Object.assign({}, serie);
+          $scope.reserveSeries.push(serieCopy);
+          if(serie && serie.data && serie.data.length > 0){
+            serie['data'] = [parseInt(e.layer.feature.properties['code'].replace(/area/g, ''))]
+          }
+        }
+        $scope.topCities = [e.layer.feature.properties['name']];
+        generateHighChart();
+
+      }
 			stateInfo.update(e.layer.feature.properties);
 			if(e.layer._popup){
 				e.layer.openPopup();
@@ -42,13 +71,97 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 			geojson.eachLayer(function(layer) {
 				geojson.resetStyle(layer);
 			});
+      if($scope.reserveSeries && $scope.reserveSeries.length > 0 && $scope.reserveTopCities && $scope.reserveTopCities.length > 0){
+         $scope.series = $scope.reserveSeries;
+         $scope.topCities = $scope.reserveTopCities;
+        generateHighChart();
+      }
 			stateInfo.update();
 		});
 		map.addControl(searchControl);
 
+    stateInfo.onAdd = function (map) {
+  	    this._div = L.DomUtil.create('div', 'info legend');
+  			this._div.innerHTML = "<div id='stateInfo' style='min-width: 310px; height: 400px; margin: 0 auto'></div>";
+  	    this.update();
+  	    return this._div;
+  	};
+
+  	// method that we will use to update the control based on feature properties passed
+  	stateInfo.update = function (props) {
+	    // this._div.innerHTML = '<h4>Luckiest cities of Finland</h4>' +  (props ?
+	    //     '<b>' + props.name + '</b><br />' + props.code
+	    //     : 'Hover over a state');
+  	};
+  	stateInfo.addTo(map);
+
+		$scope.getLotteryCitiesFromJson = function(){
+      Promise.resolve().then(function() {
+        return apiService.get('../../data/citiesLottery.json').then(function(result){
+  				if(result && result.data){
+            return Promise.resolve(result.data.lottery);
+  				}
+          return Promise.reject({message: 'getLotteryCitiesFromJson(): Could not get data from json file'});
+  			});
+      }).then(function(cities){
+        if(cities && cities.length > 0){
+          if($scope.layers && $scope.layers.length > 0){
+            let citiesFromLayers = [];
+            for (var i = 0; i < $scope.layers.length; i++) {
+              let layerProperty = $scope.layers[i].feature.properties;
+              let city = {name: layerProperty.name, lotteryGames: null};
+              citiesFromLayers.push(city);
+            }
+            if(citiesFromLayers && citiesFromLayers.length > 0){
+              return Promise.resolve([citiesFromLayers, cities]);
+            }
+            return Promise.resolve();
+          }
+        } else {
+          return Promise.reject({message: 'getLotteryCitiesFromJson(): cities array is null rejecting..'});
+        }
+      }).then(function([citiesFromLayers, cities]){
+        let filteredCities = [];
+        for (let object of cities) {
+          if(citiesFromLayers.includes(object.city.name) > -1){
+            citiesFromLayers.filter(function(cityFromLayers){
+              if(cityFromLayers.name == object.city.name){
+                cityFromLayers.lotteryGames = object.city.mostPlayedGames
+                filteredCities.push(cityFromLayers);
+              }
+            });
+          }
+        }
+        if(filteredCities && filteredCities.length > 0){
+          return Promise.resolve(filteredCities);
+        }
+        return Promise.reject({message: 'getLotteryCitiesFromJson(): filteredCities array is either empty or null'});
+      }).then(function(filteredCities){
+        $scope.topCities = filteredCities.map(a => a.name).sort();
+        $scope.series = [];
+        if(filteredCities[0].lotteryGames && Object.keys(filteredCities[0].lotteryGames).length === 3){
+          let serie = {};
+          for(let lotteryGame in filteredCities[0].lotteryGames){
+            serie = {}
+            let lotteryData = [];
+            serie['name'] = lotteryGame;
+            serie['color'] = lotteryEntities[lotteryGame];
+            for (let i = 0; i < filteredCities.length; ++i) {
+              let filterCityLotteryGames = filteredCities[i].lotteryGames;
+              lotteryData.push(parseInt(filterCityLotteryGames[lotteryGame]));
+            }
+            serie['data'] = lotteryData;
+            $scope.series.push(serie);
+          }
+        }
+        generateHighChart();
+      }).catch(function(err){
+        $exceptionHandler("Error occured: getLotteryCitiesFromJson():", err.message || err);
+      });
+		}();
 
 	function getColor(code) {
-		let colors = ['#5E3177', '#FFC41E', '#0066FF'];
+		let colors = Object.values(lotteryEntities);
 		try {
 			let codeNum = code.replace(/area/g, '');
 			if (codeNum <= 300) {
@@ -59,7 +172,7 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 				return colors[2];
 			}
 		} catch (err) {
-			$exceptionHandler("Error occured:", err.message || JSON.stringfy(err));
+			$exceptionHandler("Error occured: getColor():", err.message || JSON.stringfy(err));
 		}
 
 	}
@@ -109,40 +222,35 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 			$scope.layers.push(layer);
 	}
 
-	$scope.refactorCities = function(){
-		try {
-			if($scope.layers && $scope.layers.length > 0){
-				let sortable = [];
-				for (var i = 0; i < $scope.layers.length; i++) {
-					let layerProperty = $scope.layers[i].feature.properties;
-					let city = {name: layerProperty.name, point: layerProperty.code.replace(/area/g, '')};
-					$scope.cities.push(city);
-				}
-				if($scope.cities && $scope.cities.length > 0){
-					$scope.cities.sort(function(object1, object2){
-						return parseFloat(object2.point) - parseFloat(object1.point);
-					});
-				}
-			}
-		} catch (err) {
-			$exceptionHandler("Error while setting cities:", err.message || JSON.stringfy(err));
-		}
-	}();
-
-	stateInfo.onAdd = function (map) {
-	    this._div = L.DomUtil.create('div', 'info legend');
-			this._div.innerHTML = "<div id='stateInfo' style='min-width: 310px; height: 400px; margin: 0 auto'></div>";
-	    this.update();
-	    return this._div;
-	};
-
-	// method that we will use to update the control based on feature properties passed
-	stateInfo.update = function (props) {
-	    // this._div.innerHTML = '<h4>Luckiest cities of Finland</h4>' +  (props ?
-	    //     '<b>' + props.name + '</b><br />' + props.code
-	    //     : 'Hover over a state');
-	};
-	stateInfo.addTo(map);
+  function generateHighChart(){
+    Highcharts.chart('stateInfo', {
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: 'Luckiest cities of Finland'
+        },
+        xAxis: {
+            categories: $scope.topCities
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Lottery win'
+            }
+        },
+        tooltip: {
+            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
+            shared: true
+        },
+        plotOptions: {
+            column: {
+                stacking: 'percent'
+            }
+        },
+        series: $scope.series
+      });
+  }
 
 
 	// Disables map dragging
@@ -155,45 +263,4 @@ app.controller('mapController', function($scope, $http, $window, $exceptionHandl
 	  map.invalidateSize();
 	}).trigger("resize");
 
-	$( document ).ready(function() {
-		Highcharts.chart('stateInfo', {
-				chart: {
-						type: 'column'
-				},
-				title: {
-						text: 'Luckiest cities of Finland'
-				},
-				xAxis: {
-						categories: ['Helsinki', 'Turku', 'Tampere', 'Oulu', 'Jyväskylä']
-				},
-				yAxis: {
-						min: 0,
-						title: {
-								text: 'Lottery win'
-						}
-				},
-				tooltip: {
-						pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.percentage:.0f}%)<br/>',
-						shared: true
-				},
-				plotOptions: {
-						column: {
-								stacking: 'percent'
-						}
-				},
-				series: [{
-						name: 'Euro Jackpot',
-						data: [5, 3, 4, 7, 2],
-						color: '#5E3177' // Violetti
-				}, {
-						name: 'Lotto',
-						data: [2, 2, 3, 2, 1],
-						color: '#FFC41E' // Keltainen
-				}, {
-						name: 'Keno',
-						data: [3, 4, 4, 2, 5],
-						color: '#0066FF', // Sininen
-					}]
-			});
-	});
 });

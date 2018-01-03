@@ -1,0 +1,50 @@
+{
+  "lottery": [
+    {
+      "city": {
+        "name": "Helsinki",
+        "mostPlayedGames": {
+          "EuroJackpot": "23400",
+          "Keno": "25730",
+          "Lotto": "44310"
+        }
+      }
+    },{
+      "city": {
+        "name": "Turku",
+        "mostPlayedGames": {
+          "EuroJackpot": "6248",
+          "Keno": "5299",
+          "Lotto": "9017"
+        }
+      }
+    },{
+      "city": {
+        "name": "Oulu",
+        "mostPlayedGames": {
+          "EuroJackpot": "23800",
+          "Keno": "17060",
+          "Lotto": "35480"
+        }
+      }
+    },{
+      "city": {
+        "name": "Tampere",
+        "mostPlayedGames": {
+          "EuroJackpot": "42760",
+          "Keno": "17060",
+          "Lotto": "35480"
+        }
+      }
+    },{
+      "city": {
+        "name": "Jyväskylä",
+        "mostPlayedGames": {
+          "EuroJackpot": "4276",
+          "Keno": "1706",
+          "Lotto": "3548"
+        }
+      }
+    }
+  ]
+}

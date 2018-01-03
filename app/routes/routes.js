@@ -1,5 +1,6 @@
 var router = require('express').Router();
 var dateUtils = require('../utils/date');
+const https = require('https');
 
 module.exports = function(app) {
   /**
@@ -12,8 +13,8 @@ module.exports = function(app) {
     next();
   });
 
-    // application -------------------------------------------------------------
-    app.get('*', function (req, res) {
-        res.sendFile(appRoot + '/app/public/index.html');
-    });
+  // application -------------------------------------------------------------
+  app.get('*', function (req, res) {
+      res.sendFile(appRoot + '/app/public/index.html');
+  });
 };
