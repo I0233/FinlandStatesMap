@@ -1,5 +1,5 @@
 # Map App
-Test project to test leaflet.js functionality
+Simple nodeJS app that displays Finland states along with their lottery statuses
 
 ## Requirements
 - [Node and npm](http://nodejs.org)
