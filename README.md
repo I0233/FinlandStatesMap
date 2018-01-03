@@ -2,7 +2,7 @@
 Simple nodeJS app that displays Finland states along with their lottery statuses
 
 ## Requirements
-- [Node and npm](http://nodejs.org)
+- [Node](http://nodejs.org) and [npm](https://www.npmjs.com)
 
 ## Installation
 1. Clone the repository: `git@github.com:I0233/FinlandStatesMap.git`
